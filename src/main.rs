@@ -28,7 +28,7 @@ async fn read_later(params: web::Query<Params>) -> impl Responder {
 
     let url = format!("\"{}\"", params.str);
     let sand_box = format!("--browser-args [{}\"--no-sandbox{}\"]", "\\", "\\");
-    let cmd  =  format!("/home/wuxin/single-file {} {} {} {} {} {}"
+    let cmd  =  format!("/app/single-file {} {} {} {} {} {}"
             , chrome_parma
             , url
             , out_put_dir

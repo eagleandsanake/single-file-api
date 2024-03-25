@@ -1,0 +1,21 @@
+version: '3'
+services:
+  single-file-api:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      - CHROME_DIR=/usr/bin/chromium
+      - SAVE_DIR=/file
+    ports:
+      - "18080:8080"
+    restart: always
+    container_name: single-file-api
+    volumes:
+      - /home/wuxin/Desktop/singleTest/:/file
+#      - /home/wuxin/Desktop/chrome-linux64:/chrome-linux64
+    networks:
+      - wx
+networks:
+  wx:
+    external: true
