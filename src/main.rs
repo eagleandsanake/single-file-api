@@ -1,6 +1,8 @@
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use serde::Deserialize; // 导入 Deserialize 特性
 use tokio::process::Command;
+use env_logger::Env;
+
 #[get("/read/later")]
 async fn read_later(params: web::Query<Params>) -> impl Responder {
     // 尝试从环境变量中获取名为SAVE_DIR的值
@@ -86,6 +88,8 @@ struct Params {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+
     HttpServer::new(|| {
         App::new()
             .service(read_later)
