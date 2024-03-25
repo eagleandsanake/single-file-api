@@ -19,6 +19,12 @@ async fn read_later(params: web::Query<Params>) -> impl Responder {
             return HttpResponse::InternalServerError().body("Failed to get environment variable");
         }
     };
+
+    let single_file_proxy = std::env::var("SINGLE_FILE_PROXY").unwrap_or_else(|_| {
+        // 如果获取环境变量失败，返回一个默认值
+        "NO_PROXY".to_string()
+    });
+
     // let chrome_parma = format!("--browser-executable-path {}", "/home/wuxin/Desktop/chrome-linux64/chrome");
     // let out_put_dir = format!("--output-directory {}", "/home/wuxin/Desktop/singleTest/");
 
@@ -28,7 +34,7 @@ async fn read_later(params: web::Query<Params>) -> impl Responder {
 
     let url = format!("\"{}\"", params.str);
     let sand_box = format!("--browser-args [{}\"--no-sandbox{}\"]", "\\", "\\");
-    let cmd  =  format!("/app/single-file {} {} {} {} {} {}"
+    let mut  cmd  =  format!("/app/single-file {} {} {} {} {} {}"
             , chrome_parma
             , url
             , out_put_dir
@@ -36,6 +42,10 @@ async fn read_later(params: web::Query<Params>) -> impl Responder {
             , "--load-deferred-images-dispatch-scroll-event=true"
             , sand_box
     );
+
+    if !single_file_proxy.eq("NO_PROXY") {
+        cmd += &format!(" --http-proxy-server {}", single_file_proxy);
+    }
     println!("{}", cmd);
 
     // cmd async exe
