@@ -48,11 +48,12 @@ async fn read_later(params: web::Query<Params>) -> impl Responder {
     // cmd async exe
     tokio::spawn(async move {
         if !back_dir.eq("NO_NEED_TO_BACK"){
+            let back_dir_full_dir = format!("--output-directory {}", back_dir);
             let mut  cmd_back  =  format!("{} {} {} {} {} {} {}"
                                           , single_page_dir
                                           , chrome_parma
                                           , url
-                                          , back_dir
+                                          , back_dir_full_dir
                                           , "--filename-template={page-title}.html"
                                           , "--load-deferred-images-dispatch-scroll-event=true"
                                           , sand_box
