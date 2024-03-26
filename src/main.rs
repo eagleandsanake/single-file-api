@@ -20,6 +20,16 @@ async fn read_later(params: web::Query<Params>) -> impl Responder {
         }
     };
 
+    let single_page_dir = std::env::var("SINGLE_FILE_DIR").unwrap_or_else(|_| {
+        // 如果获取环境变量失败，返回一个默认值
+        "/app/single-file".to_string()
+    });
+
+    let back_dir = std::env::var("BACK_UP_DIR").unwrap_or_else(|_| {
+        // 如果获取环境变量失败，返回一个默认值
+        "NO_NEED_TO_BACK".to_string()
+    });
+
     let single_file_proxy = std::env::var("SINGLE_FILE_PROXY").unwrap_or_else(|_| {
         // 如果获取环境变量失败，返回一个默认值
         "NO_PROXY".to_string()
@@ -34,22 +44,60 @@ async fn read_later(params: web::Query<Params>) -> impl Responder {
 
     let url = format!("\"{}\"", params.str);
     let sand_box = format!("--browser-args [{}\"--no-sandbox{}\"]", "\\", "\\");
-    let mut  cmd  =  format!("/app/single-file {} {} {} {} {} {}"
-            , chrome_parma
-            , url
-            , out_put_dir
-            , "--filename-template={page-title}.html"
-            , "--load-deferred-images-dispatch-scroll-event=true"
-            , sand_box
-    );
-
-    if !single_file_proxy.eq("NO_PROXY") {
-        cmd += &format!(" --http-proxy-server {}", single_file_proxy);
-    }
-    println!("{}", cmd);
 
     // cmd async exe
     tokio::spawn(async move {
+        if !back_dir.eq("NO_NEED_TO_BACK"){
+            let mut  cmd_back  =  format!("{} {} {} {} {} {} {}"
+                                          , single_page_dir
+                                          , chrome_parma
+                                          , url
+                                          , back_dir
+                                          , "--filename-template={page-title}.html"
+                                          , "--load-deferred-images-dispatch-scroll-event=true"
+                                          , sand_box
+            );
+
+            if !single_file_proxy.eq("NO_PROXY") {
+                cmd_back += &format!(" --http-proxy-server {}", single_file_proxy);
+            }
+            println!("文件备份命令 {}", cmd_back);
+
+            let output_back = Command::new("bash")
+                .arg("-c")
+                .arg(cmd_back)
+                .output()
+                .await;
+            match output_back {
+                Ok(output_back) => {
+                    if output_back.status.success() {
+                        println!("Command executed successfully");
+                    } else {
+                        println!("Command execution failed");
+                    }
+                }
+                Err(e) => {
+                    println!("Failed to execute command: {}", e);
+                }
+            }
+        }
+
+        // download to target
+        let mut  cmd  =  format!("{} {} {} {} {} {} {}"
+                                 , single_page_dir
+                                 , chrome_parma
+                                 , url
+                                 , out_put_dir
+                                 , "--filename-template={page-title}.html"
+                                 , "--load-deferred-images-dispatch-scroll-event=true"
+                                 , sand_box
+        );
+
+        if !single_file_proxy.eq("NO_PROXY") {
+            cmd += &format!(" --http-proxy-server {}", single_file_proxy);
+        }
+        println!("文件下载命令: {}", cmd);
+
         let output = Command::new("bash")
             .arg("-c")
             .arg(cmd)
